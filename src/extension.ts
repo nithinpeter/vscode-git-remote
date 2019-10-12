@@ -1,9 +1,6 @@
-'use strict';
-
 import * as vscode from 'vscode';
-import { GitProviderFileSystem } from './fileSystemProvider';
-
-const URI_SCHEME = 'GPFS';
+import { GitProviderFileSystem } from './fs-provider/fs-provider';
+import { URI_SCHEME } from './costants';
 
 export function activate(context: vscode.ExtensionContext) {
   const fs = new GitProviderFileSystem(context);
