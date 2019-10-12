@@ -42,11 +42,13 @@
   "devDependencies": {
     "@types/node": "^7.0.43",
     "@types/node-fetch": "^2.5.2",
+    "@types/url-parse": "^1.4.3",
     "@types/vscode": "^1.38.0",
     "tslint": "^5.16.0",
     "typescript": "^3.5.1"
   },
   "dependencies": {
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "url-parse": "^1.4.7"
   }
 }

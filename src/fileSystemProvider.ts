@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import fetch from 'node-fetch';
+import * as Url from 'url-parse';
 
 export class File implements vscode.FileStat {
   type: vscode.FileType;
@@ -44,7 +45,10 @@ export class Directory implements vscode.FileStat {
 export type Entry = File | Directory;
 
 export class GitProviderFileSystem implements vscode.FileSystemProvider {
+  repoUrl: string = '';
   root = new Directory('');
+
+  constructor(private _context: vscode.ExtensionContext) {}
 
   // --- manage file metadata
 
@@ -55,7 +59,16 @@ export class GitProviderFileSystem implements vscode.FileSystemProvider {
   async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     let entry = this._lookupAsDirectory(uri, false);
     if (!(entry && entry.entries.size)) {
-      const res = await populateFiles(uri.path);
+      let res;
+      try {
+        res = await populateFiles(
+          this._context.workspaceState.get('repoUrl', ''),
+          uri.path
+        );
+      } catch (e) {
+        vscode.window.showErrorMessage(e.message);
+        throw vscode.FileSystemError.Unavailable('Failed to fetch');
+      }
       res.forEach(item => {
         if (item.type === vscode.FileType.Directory) {
           this.createDirectory(item.uri, { inMemory: true });
@@ -260,10 +273,13 @@ type Item = {
 
 const URI_SCHEME = 'GPFS';
 
-const populateFiles = async (path: string) => {
-  const repo =
-    'https://api.github.com/repos/nithinpeter/hcard/contents/' + path;
-  const res = await fetch(repo);
+const populateFiles = async (repoUrl: string, path: string) => {
+  const apiUrl = `${getApiBaseUrl(repoUrl)}/contents/${stripSlash(path)}`;
+  const res = await fetch(apiUrl);
+  if (!res.ok) {
+    const errorMessge = await res.text();
+    throw new Error(errorMessge);
+  }
   const data: Item[] = await res.json();
 
   return data.map(item => {
@@ -274,7 +290,6 @@ const populateFiles = async (path: string) => {
     if (item.type === 'dir') {
       return { uri, type: vscode.FileType.Directory };
     } else {
-      // later
       var buf = Buffer.from('');
       const content = new Uint8Array(buf);
       return {
@@ -293,4 +308,15 @@ const readFileContent = async (dowloadUrl: string) => {
   var buf = Buffer.from(text);
   const content = new Uint8Array(buf);
   return content;
+};
+
+const getApiBaseUrl = (repoUrl: string) => {
+  const p = new Url(repoUrl);
+  return `${p.protocol}//api.${stripSlash(p.hostname)}/repos/${stripSlash(
+    p.pathname
+  )}`;
+};
+
+const stripSlash = (str: string) => {
+  return str.replace(/^\//, '').replace(/\/$/, '');
 };
