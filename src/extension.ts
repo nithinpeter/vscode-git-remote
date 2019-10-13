@@ -21,6 +21,7 @@ function init(context: vscode.ExtensionContext) {
     .showInputBox({
       prompt: 'Enter the git repo URL',
       ignoreFocusOut: true,
+      validateInput,
     })
     .then(repoUrl => {
       context.workspaceState.update('repoUrl', repoUrl);
@@ -42,4 +43,11 @@ const initWorkspace = (repoUrl: string) => {
     ),
     name: getFsBasePathFromRepoUrl(repoUrl),
   });
+};
+
+const validateInput = (value: string) => {
+  const regex = /https:\/\/github.com\/[A-Za-z0-9_.\-~]+\/[A-Za-z0-9_.\-~]+/;
+  if (!regex.test(value)) {
+    return 'Enter a valid URL, e.g. `https://github.com/microsoft/vscode`';
+  }
 };
