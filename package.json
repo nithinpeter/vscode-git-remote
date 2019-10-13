@@ -2,13 +2,13 @@
   "name": "vscode-git-remote",
   "displayName": "Git Remote",
   "description": "View your Git remote repo in VS Code without cloning",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "vespa-dev-works",
   "repository": {
     "url": "https://github.com/nithinpeter/vscode-git-remote.git",
     "type": "git"
   },
-  "icon": "logo/logo-128.png",
+  "icon": "assets/logo.png",
   "galleryBanner": {
     "theme": "dark"
   },
