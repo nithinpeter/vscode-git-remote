@@ -1,6 +1,7 @@
 {
   "name": "vscode-git-remote",
-  "displayName": "Git Remote",
+  "preview": true,
+  "displayName": "Git Remote File System",
   "description": "View your Git remote repo in VS Code without cloning",
   "version": "0.0.9",
   "publisher": "vespa-dev-works",
@@ -8,6 +9,17 @@
     "url": "https://github.com/nithinpeter/vscode-git-remote.git",
     "type": "git"
   },
+  "keywords": [
+    "git",
+    "github",
+    "bitbucket",
+    "gitlab",
+    "git provider",
+    "remote",
+    "filesystem provider",
+    "remote filesystem",
+    "git filesystem"
+  ],
   "icon": "assets/logo.png",
   "galleryBanner": {
     "theme": "dark",
