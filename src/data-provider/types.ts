@@ -7,13 +7,6 @@ export type Item = {
   content?: Uint8Array;
 };
 
-export enum DataProviderKind {
-  Github = 'GITHUB',
-  Bitbucket = 'BITBUCKET',
-  Gitlab = 'GITLAB',
-  Unknown = 'UNKNOWN',
-}
-
 export interface DataProvider {
   getItemsInPath(path: string): Promise<Item[]>;
   getFileContent(fileDownloadUrl: string): Promise<Uint8Array>;

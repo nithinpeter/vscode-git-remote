@@ -1,42 +1,33 @@
-import * as Url from 'url-parse';
-
-import { DataProvider, DataProviderKind } from './types';
+import { DataProvider } from './types';
 import { GitHubProvider } from './github-provider';
+import { getProviderKindFromRepoUrl, getRepoUrlFromFsBasePath } from '../utils';
+import { DataProviderKind } from '../costants';
 
 class DataProviderFactory {
-  private static instances: { [repoUrl: string]: DataProvider } = {};
+  private instances: { [fsBasePath: string]: DataProvider } = {};
 
-  public provider(repoUrl: string) {
-    if (!DataProviderFactory.instances[repoUrl]) {
-      DataProviderFactory.instances[repoUrl] = this.createInstance(repoUrl);
+  public provider(fsBasePath: string) {
+    if (!this.instances[fsBasePath]) {
+      this.instances[fsBasePath] = this.createInstance(
+        fsBasePath
+      );
     }
-    return DataProviderFactory.instances[repoUrl];
+    return this.instances[fsBasePath];
   }
 
-  private createInstance(repoUrl: string) {
-    const kind: DataProviderKind = this.findProviderKind(repoUrl);
+  private createInstance(fsBasePath: string) {
+    const repoUrl = getRepoUrlFromFsBasePath(fsBasePath);
+    const kind: DataProviderKind = getProviderKindFromRepoUrl(repoUrl!);
 
     switch (kind) {
       case DataProviderKind.Github:
-        return new GitHubProvider(repoUrl);
+        return new GitHubProvider(fsBasePath);
       case DataProviderKind.Bitbucket:
       case DataProviderKind.Gitlab:
       case DataProviderKind.Unknown:
       default:
         throw new Error(`Data provider not implemented for: ${kind}`);
     }
-  }
-
-  private findProviderKind(repoUrl: string): DataProviderKind {
-    const { hostname } = new Url(repoUrl);
-    if (hostname.includes('github.com')) {
-      return DataProviderKind.Github;
-    } else if (hostname.includes('bitbucket.org')) {
-      return DataProviderKind.Bitbucket;
-    } else if (hostname.includes('gitlab.com')) {
-      return DataProviderKind.Gitlab;
-    }
-    return DataProviderKind.Unknown;
   }
 }
 

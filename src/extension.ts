@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { GitProviderFileSystem } from './fs-provider/fs-provider';
 import { URI_SCHEME } from './costants';
+import { getFsBasePathFromRepoUrl, getWsFolder } from './utils';
 
 export function activate(context: vscode.ExtensionContext) {
   const fs = new GitProviderFileSystem(context);
@@ -28,26 +29,17 @@ function init(context: vscode.ExtensionContext) {
 }
 
 const initWorkspace = (repoUrl: string) => {
-  const workspaceFolders = vscode.workspace.workspaceFolders;
+  // I could only make one WS foler open at a time with URI_SCHEME == 'GPFS :(
+  // @ts-ignore
+  const wsIndex = (getWsFolder() || {}).index;
+  const hasWsAlready = typeof wsIndex === 'number';
+  const insertIndex = hasWsAlready ? wsIndex : 0;
+  const deleteCount = hasWsAlready ? 1 : 0;
 
-  if (workspaceFolders) {
-    const wsFolder = workspaceFolders.find(wsf => {
-      return wsf.uri.scheme === URI_SCHEME;
-    });
-    const wsFolderIndex = wsFolder ? wsFolder.index : undefined;
-
-    vscode.workspace.updateWorkspaceFolders(
-      typeof wsFolderIndex === 'number' ? wsFolderIndex : 0,
-      typeof wsFolderIndex === 'number' ? 1 : 0,
-      {
-        uri: vscode.Uri.parse(`${URI_SCHEME}:/`),
-        name: repoUrl,
-      }
-    );
-  }
-
-  vscode.workspace.updateWorkspaceFolders(0, 0, {
-    uri: vscode.Uri.parse(`${URI_SCHEME}:/`),
-    name: repoUrl,
+  vscode.workspace.updateWorkspaceFolders(insertIndex!, deleteCount, {
+    uri: vscode.Uri.parse(
+      `${URI_SCHEME}://${getFsBasePathFromRepoUrl(repoUrl)}/`
+    ),
+    name: getFsBasePathFromRepoUrl(repoUrl),
   });
 };

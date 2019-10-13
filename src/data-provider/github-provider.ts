@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 
 import { DataProvider, Item } from './types';
 import { URI_SCHEME } from '../costants';
-import { getApiBaseUrl, stripSlash } from '../utils';
+import { getApiBaseUrl, stripSlash, getRepoUrlFromFsBasePath } from '../utils';
 
 type GithubItem = {
   path: string;
@@ -12,11 +12,10 @@ type GithubItem = {
 };
 
 export class GitHubProvider implements DataProvider {
-  constructor(private repoUrl: string) {}
+  constructor(private fsBasePath: string) {}
   public async getItemsInPath(path: string): Promise<Item[]> {
-    const apiUrl = `${getApiBaseUrl(this.repoUrl)}/contents/${stripSlash(
-      path
-    )}`;
+    const repoUrl = getRepoUrlFromFsBasePath(this.fsBasePath);
+    const apiUrl = `${getApiBaseUrl(repoUrl!)}/contents/${stripSlash(path)}`;
     const res = await fetch(apiUrl);
     if (!res.ok) {
       const errorMessge = await res.text();
@@ -28,14 +27,20 @@ export class GitHubProvider implements DataProvider {
       if (item.path.startsWith('./')) {
         item.path = item.path.split('./')[1];
       }
-      const uri = vscode.Uri.parse(`${URI_SCHEME}:/${item.path}`);
+      const uri = vscode.Uri.parse(
+        `${URI_SCHEME}://${this.fsBasePath}/${item.path}`
+      );
+
       if (item.type === 'dir') {
-        return { uri, type: vscode.FileType.Directory };
+        return {
+          uri: uri.with({ query: `type=${vscode.FileType.Directory}` }),
+          type: vscode.FileType.Directory,
+        };
       } else {
         var buf = Buffer.from('');
         const content = new Uint8Array(buf);
         return {
-          uri,
+          uri: uri.with({ query: `type=${vscode.FileType.File}` }),
           content,
           type: vscode.FileType.File,
           downloadUrl: item.download_url,

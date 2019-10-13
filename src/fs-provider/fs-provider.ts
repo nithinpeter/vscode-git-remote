@@ -49,8 +49,8 @@ export class GitProviderFileSystem implements vscode.FileSystemProvider {
 
   constructor(private _context: vscode.ExtensionContext) {}
 
-  getRepoUrl() {
-    return this._context.workspaceState.get('repoUrl', '');
+  getFsBasePath(uri: vscode.Uri) {
+    return uri.authority;
   }
 
   // --- manage file metadata
@@ -65,7 +65,7 @@ export class GitProviderFileSystem implements vscode.FileSystemProvider {
       let res;
       try {
         res = await factory
-          .provider(this.getRepoUrl())
+          .provider(this.getFsBasePath(uri))
           .getItemsInPath(uri.path);
       } catch (e) {
         vscode.window.showErrorMessage(e.message);
@@ -104,7 +104,7 @@ export class GitProviderFileSystem implements vscode.FileSystemProvider {
       if (entry.data.length === 0) {
         if (entry.dowloadUrl) {
           const content = await factory
-            .provider(this.getRepoUrl())
+            .provider(this.getFsBasePath(uri))
             .getFileContent(entry.dowloadUrl);
           this.writeFile(uri, content, {
             create: true,
