@@ -8,6 +8,10 @@
     "url": "https://github.com/nithinpeter/vscode-git-remote.git",
     "type": "git"
   },
+  "icon": "assets/logo-128.png",
+  "galleryBanner": {
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.38.0"
   },
