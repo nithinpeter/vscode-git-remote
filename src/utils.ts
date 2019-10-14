@@ -71,7 +71,7 @@ export const getWorkspaceFolderLabel = (repoUrl: string) => {
 
   // example: github://vscode/microsoft@master
   const kind = getProviderKindFromRepoUrl(repoUrl).toLowerCase();
-  return `${kind}://${pathname}`;
+  return `${kind}://${stripSlash(pathname)}`;
 };
 
 export const validateRepoUrl = (repoUrl: string = '') => {
