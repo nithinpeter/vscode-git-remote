@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { GitProviderFileSystem } from './fs-provider/fs-provider';
 import { URI_SCHEME } from './costants';
-import { getFsBasePathFromRepoUrl, getWsFolder } from './utils';
+import {
+  getFsBasePathFromRepoUrl,
+  getWorkspaceFolderLabel,
+  getWsFolder,
+  validateRepoUrl,
+} from './utils';
 
 export function activate(context: vscode.ExtensionContext) {
   const fs = new GitProviderFileSystem(context);
@@ -21,10 +26,16 @@ function init(context: vscode.ExtensionContext) {
     .showInputBox({
       prompt: 'Enter the git repo URL',
       ignoreFocusOut: true,
-      validateInput,
+      placeHolder: `E.g. https://github.com/microsoft/vscode (followed by an optional @branch, @tag or @hash)`,
     })
     .then(repoUrl => {
-      context.workspaceState.update('repoUrl', repoUrl);
+      if (!validateRepoUrl(repoUrl)) {
+        vscode.window.showErrorMessage(
+          'Please enter a valid URL, e.g. https://github.com/microsoft/vscode@master'
+        );
+        return;
+      }
+
       initWorkspace(repoUrl!);
     });
 }
@@ -41,13 +52,6 @@ const initWorkspace = (repoUrl: string) => {
     uri: vscode.Uri.parse(
       `${URI_SCHEME}://${getFsBasePathFromRepoUrl(repoUrl)}/`
     ),
-    name: getFsBasePathFromRepoUrl(repoUrl),
+    name: getWorkspaceFolderLabel(repoUrl),
   });
-};
-
-const validateInput = (value: string) => {
-  const regex = /https:\/\/github.com\/[A-Za-z0-9_.\-~]+\/[A-Za-z0-9_.\-~]+/;
-  if (!regex.test(value)) {
-    return 'Enter a valid URL, e.g. `https://github.com/microsoft/vscode`';
-  }
 };

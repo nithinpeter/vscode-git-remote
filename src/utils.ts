@@ -10,8 +10,15 @@ export const getApiBaseUrl = (repoUrl: string) => {
   )}`;
 };
 
+export const getRefQuery = (repoUrl: string) => {
+  const p = new Url(repoUrl);
+  const refQuery = String(p.query || '');
+
+  return `${refQuery}`;
+};
+
 export const stripSlash = (str: string) => {
-  // strip leading and trainling slashes
+  // strip leading and trailing slashes
   return str.replace(/^\//, '').replace(/\/$/, '');
 };
 
@@ -31,24 +38,45 @@ export const getProviderKindFromRepoUrl = (
 
 export const getFsBasePathFromRepoUrl = (repoUrl: string): string => {
   const { pathname } = new Url(repoUrl);
-  // vscode does not like `/` in the base path for some reason
-  const friendlyPathName = stripSlash(pathname).replace('/', ':');
+  let [repoPath, ref] = pathname.split('@');
 
-  // example: GITHUB@vscode:microsoft
-  return `${getProviderKindFromRepoUrl(repoUrl)}@${friendlyPathName}`;
+  // vscode does not like `/` in the base path for some reason
+  const friendlyRepoPath = stripSlash(repoPath).replace('/', ':');
+  const friendlyRef = stripSlash(ref || '').replace('/', ':');
+
+  // example: GITHUB@vscode:microsoft#master
+  return (
+    `${getProviderKindFromRepoUrl(repoUrl)}@${friendlyRepoPath}` +
+    (friendlyRef ? `:${friendlyRef}` : '')
+  );
 };
 
 export const getRepoUrlFromFsBasePath = (fsBasePath: string) => {
-  let [kind, repoPath] = fsBasePath.split('@');
-  repoPath = repoPath.replace(':', '/');
+  let [kind, pathName] = fsBasePath.split('@');
+
+  const [owner, repo, ref] = pathName.split(':');
+  const refQuery = ref ? `?ref=${ref}` : '';
 
   if (kind === DataProviderKind.Github) {
-    return `https://github.com/${repoPath}`;
+    return `https://github.com/${owner}/${repo}${refQuery}`;
   } else if (kind === DataProviderKind.Bitbucket) {
-    return `https://github.com/${repoPath}`;
+    return `https://bitbucket.com/${owner}/${repo}${refQuery}`;
   } else if (kind === DataProviderKind.Gitlab) {
-    return `https://gitlab.com/${repoPath}`;
+    return `https://gitlab.com/${owner}/${repo}${refQuery}`;
   }
+};
+
+export const getWorkspaceFolderLabel = (repoUrl: string) => {
+  const { pathname } = new Url(repoUrl);
+
+  // example: github://vscode/microsoft@master
+  const kind = getProviderKindFromRepoUrl(repoUrl).toLowerCase();
+  return `${kind}://${pathname}`;
+};
+
+export const validateRepoUrl = (repoUrl: string = '') => {
+  const regex = /https:\/\/github.com\/[A-Za-z0-9_.\-~]+\/[A-Za-z0-9_.\-~]+/;
+  return regex.test(repoUrl);
 };
 
 export const getWsFolder = (): vscode.WorkspaceFolder | undefined => {

@@ -3,7 +3,12 @@ import fetch from 'node-fetch';
 
 import { DataProvider, Item } from './types';
 import { URI_SCHEME } from '../costants';
-import { getApiBaseUrl, stripSlash, getRepoUrlFromFsBasePath } from '../utils';
+import {
+  getApiBaseUrl,
+  getRefQuery,
+  stripSlash,
+  getRepoUrlFromFsBasePath,
+} from '../utils';
 
 type GithubItem = {
   path: string;
@@ -15,12 +20,17 @@ export class GitHubProvider implements DataProvider {
   constructor(private fsBasePath: string) {}
   public async getItemsInPath(path: string): Promise<Item[]> {
     const repoUrl = getRepoUrlFromFsBasePath(this.fsBasePath);
-    const apiUrl = `${getApiBaseUrl(repoUrl!)}/contents/${stripSlash(path)}`;
+    const apiUrl = `${getApiBaseUrl(repoUrl!)}/contents/${stripSlash(
+      path
+    )}${getRefQuery(repoUrl!)}`;
+
     const res = await fetch(apiUrl);
+
     if (!res.ok) {
       const errorMessge = await res.text();
       throw new Error(errorMessge);
     }
+
     const data: GithubItem[] = await res.json();
 
     return data.map(item => {
