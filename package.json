@@ -67,6 +67,6 @@
   },
   "dependencies": {
     "node-fetch": "^2.6.0",
-    "url-parse": "^1.4.7"
+    "url-parse": "^1.5.8"
   }
 }
